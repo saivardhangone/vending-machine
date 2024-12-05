@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #343a40;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #coinFormContainer {
+            background-color: #ffffff;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            display: none;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+        }
+
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .info-message {
+            color: #007bff;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .add-product {
+            background-color: #007bff;
+            transition: background-color 0.3s;
+        }
+
+        .add-product:hover {
+            background-color: #0069d9;
+        }
+
+        .highlight {
+            background-color: #ffc107 !important;
+            color: #343a40;
+        }
+
+        .no-products-message {
+            text-align: center;
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        function showCoinForm(itemName, itemPrice) {
+            const formContainer = document.getElementById('coinFormContainer');
+            formContainer.innerHTML = `
+                <h3>Enter Coin Quantities for ${itemName} ($${itemPrice})</h3>
+                <div class="info-message" id="totalMessage">Please enter coins to buy this product.</div>
+                <form id="coinForm" action="/purchase" method="POST" submit="return validateForm(${itemPrice})">
+                    <label for="oneCoin">1 Coin:</label>
+                    <input type="number" id="oneCoin" name="oneCoin" value="0" min="0" oninput="updateTotal(${itemPrice})"/><br>
+                    <label for="fiveCoin">5 Coin:</label>
+                    <input type="number" id="fiveCoin" name="fiveCoin" value="0" min="0"  oninput="updateTotal(${itemPrice})"/><br>
+                    <label for="tenCoin">10 Coin:</label>
+                    <input type="number" id="tenCoin" name="tenCoin" value="0" min="0" oninput="updateTotal(${itemPrice})"/><br>
+                    <label for="twentyFiveCoin">25 Coin:</label>
+                    <input type="number" id="twentyFiveCoin" name="twentyFiveCoin" value="0" min="0" oninput="updateTotal(${itemPrice})"/><br>
+                    <input type="hidden" name="productName" value="${itemName}" />
+                    <input type="hidden" name="productPrice" value="${itemPrice}" />
+                    <button type="submit">Proceed</button>
+                    <div class="error-message" id="errorMessage" style="display: none;"></div>
+                </form>
+            `;
+            formContainer.style.display = 'block';
+            updateTotal(itemPrice); // Initialize the total message
+        }
+
+        function updateTotal(productPrice) {
+            const oneCoin = parseInt(document.getElementById('oneCoin').value) || 0;
+            const fiveCoin = parseInt(document.getElementById('fiveCoin').value) || 0;
+            const tenCoin = parseInt(document.getElementById('tenCoin').value) || 0;
+            const twentyFiveCoin = parseInt(document.getElementById('twentyFiveCoin').value) || 0;
+
+            const totalAmount = (oneCoin * 1) + (fiveCoin * 5) + (tenCoin * 10) + (twentyFiveCoin * 25);
+            const totalMessage = document.getElementById('totalMessage');
+            const remainingAmount = productPrice - totalAmount;
+
+            if (totalAmount > 0) {
+                totalMessage.textContent = `Total: $${totalAmount}. ${remainingAmount > 0 ? `You need to add $${remainingAmount}.` : 'You have enough cash!'}`;
+            } else {
+                totalMessage.textContent = 'Please enter coins to buy this product.';
+            }
+               if (totalAmount >= productPrice) {
+                 document.getElementById('oneCoin').readOnly = true;
+                document.getElementById('fiveCoin').readOnly = true;
+                document.getElementById('tenCoin').readOnly = true;
+                document.getElementById('twentyFiveCoin').readOnly = true;
+                } else {
+                document.getElementById('oneCoin').readOnly = false;
+                document.getElementById('fiveCoin').readOnly = false;
+                document.getElementById('tenCoin').readOnly = false;
+                document.getElementById('twentyFiveCoin').readOnly = false;
+    }
+
+             
+
+        }
+
+
+        function validateForm(productPrice) {
+            const oneCoin = parseInt(document.getElementById('oneCoin').value) || 0 ;
+            const fiveCoin = parseInt(document.getElementById('fiveCoin').value) || 0;
+            const tenCoin = parseInt(document.getElementById('tenCoin').value) || 0;
+            const twentyFiveCoin = parseInt(document.getElementById('twentyFiveCoin').value)|| 0 ;
+
+            const totalAmount = (oneCoin * 1) + (fiveCoin * 5) + (tenCoin * 10) + (twentyFiveCoin * 25);
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.style.display = 'none'; // Hide any previous error message
+
+            // Check if any coins are entered
+            if (totalAmount <= 0) {
+                errorMessage.textContent = 'With these coins, purchase is not possible. Please enter at least one coin.';
+                errorMessage.style.display = 'block';
+                return false; // Prevent form submission
+            }
+
+            // Check if total amount is sufficient
+            if (totalAmount < productPrice) {
+                errorMessage.textContent = 'You need more cash to buy this product.';
+                errorMessage.style.display = 'block';
+                return false; // Prevent form submission
+            }
+
+            return true; // Allow form submission
+        }
+    </script>
+</head>
+<body>
+<h1>Product List</h1>
+<button class="add-product" onclick="location.href='/addProduct'" th:classappend="${#lists.isEmpty(products)} ? 'highlight' : ''">
+    Add Product
+</button>
+
+<!-- Conditional rendering based on product availability -->
+<div th:if="${#lists.isEmpty(products)}" class="no-products-message">
+    No products are available to buy.
+</div>
+
+<table th:if="${!#lists.isEmpty(products)}">
+    <thead>
+    <tr>
+        <th>Item Name</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <th:block th:each="item : ${products}">
+        <tr>
+            <td th:text="${item.name}"></td>
+            <td th:text="${item.price}"></td>
+            <td th:text="${item.availableStock}"></td>
+            <td>
+                <button type="button"
+                        th:data-name="${item.name}"
+                        th:data-price="${item.price}"
+                        onclick="showCoinForm(this.dataset.name, this.dataset.price)">
+                    Buy
+                </button>
+            </td>
+        </tr>
+    </th:block>
+    </tbody>
+</table>
+
+<div id="coinFormContainer"></div>
+
+</body>
+</html>
